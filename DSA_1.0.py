@@ -161,7 +161,7 @@ def xcorrssl( scanTimeBeg, scanTimeEnd, tem, tra ):
 
 #-- subroutine: arrival time forward modelling kernel
 def subArrivalTimeForward( velModel, srcDepth, recDisInDeg, phaList, recDepth ):
-    model = TauPyModel(model= velModel )
+    model = TauPyModel(model= velModel.lower() )
     
     try:
         arrivals = model.get_travel_times(source_depth_in_km=srcDepth,
@@ -306,7 +306,7 @@ dataPath, velModel, arrTimeDiffTole, ccThreshold, frequencyFrom, frequencyTo,\
 scanDepthFrom, scanDepthTo, verboseFlag, plotSteps1n2Flag = load_settings()
     
 #%%-- get the number of waveform files (HH* components)
-wfFiles = fnmatch.filter( sorted(os.listdir(dataPath)), '*.SAC')
+wfFiles = fnmatch.filter( sorted(os.listdir(dataPath)), '*.[Ss][Aa][Cc]')
 numSt = np.int( len(wfFiles)/3 ) # 3 -> three components
 for i in range( numSt):
     print( '\t SAC files in the directory:')
@@ -348,7 +348,15 @@ print( '\n======================================\n')
     
 
 #%%-- velocity for tauP
-taup_create.build_taup_model( str(dataPath)+str(velModel)+'.nd' )
+if velModel.lower() != velModel:
+    src=str(dataPath)+str(velModel)+'.nd'
+    dst=str(dataPath)+str(velModel.lower())+'.nd'
+    shutil.copyfile(src,dst)
+    del(src)
+taup_create.build_taup_model( str(dataPath)+str(velModel.lower())+'.nd' )
+if velModel.lower() != velModel:
+    os.remove(dst)
+    del(dst)
     
 #%%-- Allocate memory
 numScanDepth = np.int(scanDepthTo-scanDepthFrom)
@@ -670,7 +678,7 @@ for ist in range( numSt ):
     crustInterfaceDepths = GetCrustInterfaceDepths( velModel )
     print( 'crustInterfaceDepths = ', crustInterfaceDepths )
     phaList = [ "p", "Pg" ]
-    arrivals, rays = subArrivalTimeForward( velModel, refDepth, recDisInDeg, phaList, recDepth )
+    arrivals, rays = subArrivalTimeForward( velModel.lower(), refDepth, recDisInDeg, phaList, recDepth )
     arrivals, rays = subDeleteRefractedWave( crustInterfaceDepths, refDepth, arrivals, rays )
     calOnsetP = arrivals[0].time
     print( arrivals )
@@ -1755,7 +1763,7 @@ else:
             tZcc= np.arange( 0, corrLengZ,   1)*DT
             
             #%%
-            ax0.hist( histZ, normed=False, bins=11, orientation='horizontal')
+            ax0.hist( histZ, density=False, bins=11, orientation='horizontal')
             ax1.plot( t1Z, tempZ0, color='orange' )
             ax2.plot( t1Z, tempZ60 )
             ax3.plot( t1Z, tempZ120 )
@@ -1964,7 +1972,7 @@ else:
             t2R = np.arange( 0, len(dataR),  1)*DT
             tRcc= np.arange( 0, corrLengR,   1)*DT
             
-            ax0.hist( histR, normed=False, bins=11, orientation='horizontal')
+            ax0.hist( histR, density=False, bins=11, orientation='horizontal')
             ax1.plot( t1R, tempR0, color='orange' )
             ax2.plot( t1R, tempR60 )
             ax3.plot( t1R, tempR120 )
@@ -2173,7 +2181,7 @@ else:
             t2T = np.arange( 0, len(dataT),  1)*DT
             tTcc= np.arange( 0, corrLengT,   1)*DT
             
-            ax0.hist( histT, normed=False, bins=11, orientation='horizontal')
+            ax0.hist( histT, density=False, bins=11, orientation='horizontal')
             ax1.plot( t1T, tempT0, color='orange' )
             ax2.plot( t1T, tempT60 )
             ax3.plot( t1T, tempT120 )
